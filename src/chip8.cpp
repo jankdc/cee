@@ -40,7 +40,7 @@ cee::Chip8::Chip8()
 
     // Load operations
     #ifndef ADD_OP
-    #define ADD_OP(n) mOps.emplace(n, std::bind(&Chip8::op##n, *this));
+    #define ADD_OP(n) mOps.emplace(n, std::bind(&Chip8::op##n, this));
 
     ADD_OP(0xA000)
     ADD_OP(0x0000)

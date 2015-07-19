@@ -10,13 +10,13 @@
 
 #include "chip8.hpp"
 
-GLFWwindow *
+static GLFWwindow *
 setupWindow(int width, int height, const char * title);
 
-std::vector<uint8_t>
+static std::vector<uint8_t>
 readAllBytes(const char * path);
 
-std::array<uint8_t, 16>
+static std::array<uint8_t, 16>
 getKeyStates(GLFWwindow * window);
 
 int main(int argc, char ** argv)
