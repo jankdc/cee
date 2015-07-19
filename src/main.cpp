@@ -7,11 +7,13 @@
 
 // STL Library
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 #include <array>
 
 #include "chip8.hpp"
 
-GLFWwindow * setupWindow(int width, int height, const char * title)
+auto setupWindow(int width, int height, const char * title) -> GLFWwindow *
 {
     glfwSetErrorCallback([](int err, const char * desc)
     {
@@ -66,8 +68,35 @@ GLFWwindow * setupWindow(int width, int height, const char * title)
     return window;
 }
 
-std::array<uint8_t, 16> getKeyState(GLFWwindow * window)
+auto getKeyState(GLFWwindow * window) -> std::array<uint8_t, 16>
 {
+    return {};
+}
+
+auto readBytes(const char * path) -> std::vector<uint8_t>
+{
+    std::ifstream file;
+    try
+    {
+        file.exceptions(std::ios::badbit);
+        file.open(path, std::ios::binary|std::ios::ate);
+        auto length = file.tellg();
+        std::vector<uint8_t> result(length);
+        file.seekg(0, std::ios::beg);
+        file.read((char*)&result[0], length);
+        file.close();
+
+        return result;
+    }
+    catch (std::ios_base::failure & err)
+    {
+        std::cerr << "File Error: Can't open file with path: " << path << "\n";
+    }
+    catch (std::bad_alloc & err)
+    {
+        std::cerr << "File Error: Can't open file with path: " << path << "\n";
+    }
+
     return {};
 }
 
@@ -76,6 +105,7 @@ int main(int argc, char ** argv)
     auto window = setupWindow(800, 600, "Chip8 Emulator");
 
     cee::Chip8 chip;
+    chip.loadProgram(readBytes("data/PONG"));
 
     glfwShowWindow(window);
     while (! glfwWindowShouldClose(window))
