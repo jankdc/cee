@@ -2,10 +2,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+// C Library
+#include <cstdlib>
+
 // STL Library
 #include <iostream>
+#include <array>
 
-int main(int argc, char ** argv)
+#include "chip8.hpp"
+
+GLFWwindow * setupWindow(int width, int height, const char * title)
 {
     glfwSetErrorCallback([](int err, const char * desc)
     {
@@ -15,7 +21,7 @@ int main(int argc, char ** argv)
     if (! glfwInit())
     {
         std::cerr << "GLEW Error: Could not initialise GLFW\n";
-        return -1;
+        std::exit(-1);
     }
 
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -47,7 +53,7 @@ int main(int argc, char ** argv)
     if (glewInit() != GLEW_OK)
     {
         std::cerr << "GLEW Error: Could not initialise GLEW\n";
-        return -1;
+        std::exit(-1);
     }
 
     // Sync NDC Coordinates with window resolution
@@ -57,10 +63,27 @@ int main(int argc, char ** argv)
         glViewport(0, 0, w, h);
     }
 
+    return window;
+}
+
+std::array<uint8_t, 16> getKeyState(GLFWwindow * window)
+{
+    return {};
+}
+
+int main(int argc, char ** argv)
+{
+    auto window = setupWindow(800, 600, "Chip8 Emulator");
+
+    cee::Chip8 chip;
+
     glfwShowWindow(window);
     while (! glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+
+        chip.updateKeys(getKeyState(window));
+        chip.updateCycle();
 
         // Clear back buffer and background color.
         glClear(GL_COLOR_BUFFER_BIT);
