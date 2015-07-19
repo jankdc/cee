@@ -1,11 +1,8 @@
-// Third party library dependencies
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// C Library
 #include <cstdlib>
 
-// STL Library
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -13,7 +10,43 @@
 
 #include "chip8.hpp"
 
-auto setupWindow(int width, int height, const char * title) -> GLFWwindow *
+GLFWwindow *
+setupWindow(int width, int height, const char * title);
+
+std::vector<uint8_t>
+readAllBytes(const char * path);
+
+std::array<uint8_t, 16>
+getKeyStates(GLFWwindow * window);
+
+int main(int argc, char ** argv)
+{
+    auto window = setupWindow(800, 600, "Chip8 Emulator");
+
+    cee::Chip8 chip;
+    chip.loadProgram(readAllBytes("data/PONG"));
+
+    glfwShowWindow(window);
+    while (! glfwWindowShouldClose(window))
+    {
+        chip.updateKeys(getKeyStates(window));
+        chip.updateCycle();
+
+        // Clear back buffer and background color.
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // Cleanup resources
+    glfwTerminate();
+    return 0;
+}
+
+GLFWwindow *
+setupWindow(int width, int height, const char * title)
 {
     glfwSetErrorCallback([](int err, const char * desc)
     {
@@ -33,7 +66,7 @@ auto setupWindow(int width, int height, const char * title) -> GLFWwindow *
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    auto window = glfwCreateWindow(800, 600, "Chip8 Emulator", nullptr, nullptr);
+    auto window = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
     glfwMakeContextCurrent(window);
 
@@ -68,16 +101,18 @@ auto setupWindow(int width, int height, const char * title) -> GLFWwindow *
     return window;
 }
 
-auto getKeyState(GLFWwindow * window) -> std::array<uint8_t, 16>
+std::array<uint8_t, 16>
+getKeyStates(GLFWwindow * window)
 {
     return {};
 }
 
-auto readBytes(const char * path) -> std::vector<uint8_t>
+std::vector<uint8_t>
+readAllBytes(const char * path)
 {
-    std::ifstream file;
     try
     {
+        std::ifstream file;
         file.exceptions(std::ios::badbit);
         file.open(path, std::ios::binary|std::ios::ate);
         auto length = file.tellg();
@@ -85,7 +120,6 @@ auto readBytes(const char * path) -> std::vector<uint8_t>
         file.seekg(0, std::ios::beg);
         file.read((char*)&result[0], length);
         file.close();
-
         return result;
     }
     catch (std::ios_base::failure & err)
@@ -98,31 +132,4 @@ auto readBytes(const char * path) -> std::vector<uint8_t>
     }
 
     return {};
-}
-
-int main(int argc, char ** argv)
-{
-    auto window = setupWindow(800, 600, "Chip8 Emulator");
-
-    cee::Chip8 chip;
-    chip.loadProgram(readBytes("data/PONG"));
-
-    glfwShowWindow(window);
-    while (! glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-
-        chip.updateKeys(getKeyState(window));
-        chip.updateCycle();
-
-        // Clear back buffer and background color.
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-        glfwSwapBuffers(window);
-    }
-
-    // Cleanup resources
-    glfwTerminate();
-    return 0;
 }

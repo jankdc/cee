@@ -36,9 +36,7 @@ cee::Chip8::Chip8()
 
     // Load chip8 fontset
     for (size_t i = 0; i < CHIP8_FONTSET.size(); i++)
-    {
         mMemory[i] = CHIP8_FONTSET[i];
-    }
 
     // Load operations
     #ifndef ADD_OP
@@ -46,9 +44,10 @@ cee::Chip8::Chip8()
 
     ADD_OP(0xA000)
     ADD_OP(0x0000)
+    ADD_OP(0x6000)
 
     #undef ADD_OP
-    #endif
+    #endif // ADD_OP
 }
 
 void cee::Chip8::loadProgram(std::vector<uint8_t> program)
@@ -56,9 +55,7 @@ void cee::Chip8::loadProgram(std::vector<uint8_t> program)
     // Prevent Memory Overflow
     assert(program.size() < (mMemory.size() - PROG_OFFSET));
     for (size_t i = 0; i < program.size(); i++)
-    {
         mMemory[i + PROG_OFFSET] = program[i];
-    }
 }
 
 void cee::Chip8::reset()
@@ -90,35 +87,19 @@ void cee::Chip8::updateCycle()
 
     // In cases when the instruction prefix is at the end of the byte
     // e.g. 0x000E
-    if (op == 0x0000)
-    {
-        op = mOpCode & 0x000F;
-    }
+    if (op == 0x0000) op = mOpCode & 0x000F;
 
     // Execute opcode
-    if (mOps.count(op))
-    {
-        mOps[op]();
-    }
-    else
-    {
-        std::cerr << "Chip8 Error: Unknown OpCode 0x" << std::hex << op << "\n";
-    }
+    if (mOps.count(op)) mOps[op]();
+    else printf("Chip8 Error: Unknown OpCode 0x%x\n", op);
 
-    // Update timers
-    if (mDelayTimer > 0)
-    {
-        mDelayTimer -= 1;
-    }
+    // Update delay timer
+    if (mDelayTimer > 0) mDelayTimer -= 1;
+    else // Do nothing
 
-    if (mSoundTimer > 0)
-    {
-        mSoundTimer -= 1;
-    }
-    else
-    {
-        std::cout << "Beep!\n";
-    }
+    // Update sound timer
+    if (mSoundTimer > 0) mSoundTimer -= 1;
+    else printf("Beep!\n");
 }
 
 void cee::Chip8::updateKeys(std::array<uint8_t, 16> keys)
@@ -126,10 +107,12 @@ void cee::Chip8::updateKeys(std::array<uint8_t, 16> keys)
     mKeys = keys;
 }
 
-bool cee::Chip8::shouldDraw() const
-{
-    return true;
-}
+//   ___  ____   ____ ___  ____  _____ ____
+//  / _ \|  _ \ / ___/ _ \|  _ \| ____/ ___|
+// | | | | |_) | |  | | | | | | |  _| \___ \
+// | |_| |  __/| |__| |_| | |_| | |___ ___) |
+//  \___/|_|    \____\___/|____/|_____|____/
+
 
 void cee::Chip8::op0xA000()
 {
@@ -137,6 +120,11 @@ void cee::Chip8::op0xA000()
 }
 
 void cee::Chip8::op0x0000()
+{
+    // TODO
+}
+
+void cee::Chip8::op0x6000()
 {
     // TODO
 }

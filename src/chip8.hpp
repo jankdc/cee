@@ -3,8 +3,9 @@
 #ifndef CEE_CHIP8_HPP
 #define CEE_CHIP8_HPP
 
-#include <functional>
 #include <cstdint>
+
+#include <functional>
 #include <vector>
 #include <array>
 #include <map>
@@ -20,7 +21,6 @@ namespace cee
         void loadProgram(std::vector<uint8_t> program); // Load program into emulator's memory
         void updateCycle();                             // Emulates one cycle
         void updateKeys(std::array<uint8_t, 16> keys);  // Updates the key press inputs with new ones
-        bool shouldDraw() const;                        // Should draw to screen
     private:
         using Op = std::function<void()>;
 
@@ -40,6 +40,7 @@ namespace cee
         // Operations based on opcode
         void op0xA000();
         void op0x0000();
+        void op0x6000();
     };
 }
 
