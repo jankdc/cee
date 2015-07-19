@@ -3,9 +3,11 @@
 #ifndef CEE_CHIP8_HPP
 #define CEE_CHIP8_HPP
 
+#include <functional>
 #include <cstdint>
 #include <vector>
 #include <array>
+#include <map>
 
 namespace cee
 {
@@ -20,6 +22,8 @@ namespace cee
         void updateKeys(std::array<uint8_t, 16> keys);  // Updates the key press inputs with new ones
         bool shouldDraw() const;                        // Should draw to screen
     private:
+        using Op = std::function<void()>;
+
         uint16_t                  mIndex;        // Index Register
         uint16_t                  mCounter;      // Program Counter (PC)
         uint16_t                  mOpCode;       // Current OpCode
@@ -31,6 +35,11 @@ namespace cee
         std::array<uint8_t, 16>   mRegisters;    // General Purpose Registers
         std::array<uint8_t, 16>   mKeys;         // Current key state
         std::array<uint8_t, 2048> mGfx;          // 64 x 32 Pixel Resolution
+        std::map<uint16_t, Op>    mOps;          // Mapping of operations (Ops)
+
+        // Operations based on opcode
+        void op0xA000();
+        void op0x0000();
     };
 }
 
