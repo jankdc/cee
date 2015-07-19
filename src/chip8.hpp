@@ -16,6 +16,7 @@ namespace cee
 		void reset();                                  // Reset emulation state to default settings
 		void updateCycle();                            // Emulates one cycle
 		void updateKeys(std::array<uint8_t, 16> keys); // Updates the key press inputs with new ones
+		bool shouldDraw() const;                       // Should draw to screen
 	private:
 		uint16_t                  mIndex;        // Index Register
 		uint16_t 				  mCounter;      // Program Counter (PC)

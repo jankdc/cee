@@ -19,3 +19,9 @@ void cee::Chip8::updateKeys(std::array<uint8_t, 16> keys)
 {
 	mKeys = keys;
 }
+
+bool cee::Chip8::shouldDraw() const
+{
+	return true;
+}
+
