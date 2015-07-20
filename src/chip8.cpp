@@ -159,49 +159,60 @@ void cee::Chip8::updateKeys(std::array<uint8_t, 16> keys)
 // Calls RCA 1802 program at address NNN.
 void cee::Chip8::op0x0000()
 {
-    // TODO
+    // This is ignored since we don't have that microprocessor.
 }
 
 // Clears the screen.
 void cee::Chip8::op0x000E()
 {
-    // TODO
+    mGfx.fill(0);
+    mCounter += 2;
 }
 
 // Returns from a subroutine.
 void cee::Chip8::op0x00EE()
 {
-    // TODO
+    mCounter = mStack[mStackPointer];
+    mStackPointer -= 1;
+    mCounter += 2;
 }
 
 // Jumps to address NNN.
 void cee::Chip8::op0x1000()
 {
-    // TODO
+    mCounter = mOpCode & 0x0FFF;
 }
 
 // Calls subroutine at NNN.
 void cee::Chip8::op0x2000()
 {
-    // TODO
+    mStackPointer += 1;
+    mStack[mStackPointer] = mCounter;
+    mCounter = mOpCode & 0x0FFF;
 }
 
 // Skips the next instruction if VX equals NN.
 void cee::Chip8::op0x3000()
 {
-    // TODO
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+    uint8_t nn = mOpCode & 0x00FF;
+    mCounter += (vx == nn ? 4 : 2);
 }
 
 // Skips the next instruction if VX doesn't equal NN.
 void cee::Chip8::op0x4000()
 {
-    // TODO
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+    uint8_t nn = mOpCode & 0x00FF;
+    mCounter += (vx == nn ? 2 : 4);
 }
 
 // Skips the next instruction if VX equals VY.
 void cee::Chip8::op0x5000()
 {
-    // TODO
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    mCounter += (vx == vy ? 4 : 2);
 }
 
 // Sets VX to NN.
