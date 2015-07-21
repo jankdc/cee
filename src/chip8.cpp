@@ -220,67 +220,92 @@ void cee::Chip8::op0x5000()
 // Sets VX to NN.
 void cee::Chip8::op0x6000()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] = mOpCode & 0x00FF;
+    mCounter += 2;
 }
 
 // Adds NN to VX.
 void cee::Chip8::op0x7000()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] += mOpCode & 0x00FF;
+    mCounter += 2;
 }
 
 // Sets VX to the value of VY.
 void cee::Chip8::op0x8000()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] = mRegisters[(mOpCode & 0x00F0) >> 4];
+    mCounter += 2;
 }
 
 // Sets VX to VX or VY.
 void cee::Chip8::op0x8001()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] |= mRegisters[(mOpCode & 0x00F0) >> 4];
+    mCounter += 2;
 }
 
 // Sets VX to VX and VY.
 void cee::Chip8::op0x8002()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] &= mRegisters[(mOpCode & 0x00F0) >> 4];
+    mCounter += 2;
 }
 
 // Sets VX to VX xor VY.
 void cee::Chip8::op0x8003()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] ^= mRegisters[(mOpCode & 0x00F0) >> 4];
+    mCounter += 2;
 }
 
 // Adds VY to VX. VF is set to 1 when carry, and to 0 when isn't.
 void cee::Chip8::op0x8004()
 {
-    // TODO
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+
+    mRegisters[(mOpCode & 0x0F00) >> 8] = vx + vy;
+    mRegisters[0xF] = (vx + vy > 0xFF) ? 1 : 0;
+    mCounter += 2;
 }
 
 // VY is subtracted from VX. VF is set to 0 when borrow, and 1 when isn't.
 void cee::Chip8::op0x8005()
 {
-    // TODO
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+
+    mRegisters[(mOpCode & 0x0F00) >> 8] = vx - vy;
+    mRegisters[0xF] = (vy > vx) ? 0 : 1;
+    mCounter += 2;
 }
 
 // Shifts VX right by 1. VF is set value of the least sig bit of VX before shift.
 void cee::Chip8::op0x8006()
 {
-    // TODO
+    mRegisters[0xF] = mRegisters[(mOpCode & 0x0F00) >> 8] & 1;
+    mRegisters[(mOpCode & 0x0F00) >> 8] >>= 1;
+    mCounter += 2;
 }
 
 // Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when isn't.
 void cee::Chip8::op0x8007()
 {
-    // TODO
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+
+    mRegisters[(mOpCode & 0x0F00) >> 8] = vy - vx;
+    mRegisters[0xF] = (vx > vy) ? 0 : 1;
+    mCounter += 2;
 }
 
 // Shifts VX left by 1. VF is set value of the most sig bit of VX before shift.
 void cee::Chip8::op0x800E()
 {
-    // TODO
+    mRegisters[0xF] = mRegisters[(mOpCode & 0x0F00) >> 8] & 128;
+    mRegisters[(mOpCode & 0x0F00) >> 8] <<= 1;
+    mCounter += 2;
 }
 
 // Skips the next instruction if VX doesn't equal VY.
