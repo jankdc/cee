@@ -320,6 +320,7 @@ void cee::Chip8::op0x9000()
 void cee::Chip8::op0xA000()
 {
     mIndex = mOpCode & 0x0FFF;
+    mCounter += 2;
 }
 
 // Jumps to the address NNN plus V0.
