@@ -311,19 +311,21 @@ void cee::Chip8::op0x800E()
 // Skips the next instruction if VX doesn't equal VY.
 void cee::Chip8::op0x9000()
 {
-    // TODO
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+    mCounter += (vx != vy ? 4 : 2);
 }
 
 // Sets I to the address NNN.
 void cee::Chip8::op0xA000()
 {
-    // TODO
+    mIndex = mOpCode & 0x0FFF;
 }
 
 // Jumps to the address NNN plus V0.
 void cee::Chip8::op0xB000()
 {
-    // TODO
+    mCounter = (mOpCode & 0x0FFF) + mRegisters[0x0];
 }
 
 // Sets VX to a random number, masked by NN.
