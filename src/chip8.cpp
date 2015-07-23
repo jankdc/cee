@@ -188,8 +188,8 @@ void cee::Chip8::op0x1000()
 // Calls subroutine at NNN.
 void cee::Chip8::op0x2000()
 {
-    mStackPointer += 1;
     mStack[mStackPointer] = mCounter;
+    mStackPointer += 1;
     mCounter = mOpCode & 0x0FFF;
 }
 
