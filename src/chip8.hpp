@@ -8,6 +8,7 @@
 #include <functional>
 #include <vector>
 #include <array>
+#include <random>
 #include <map>
 
 namespace cee
@@ -22,7 +23,8 @@ namespace cee
         void updateCycle();                             // Emulates one cycle
         void updateKeys(std::array<uint8_t, 16> keys);  // Updates the key press inputs with new ones
     private:
-        using Op = std::function<void()>;
+        using Op   = std::function<void()>;
+        using Dist = std::uniform_int_distribution<uint8_t>;
 
         uint16_t                  mIndex;        // Index Register
         uint16_t                  mCounter;      // Program Counter (PC)
@@ -36,6 +38,8 @@ namespace cee
         std::array<uint8_t, 16>   mKeys;         // Current key state
         std::array<uint8_t, 2048> mGfx;          // 64 x 32 Pixel Resolution
         std::map<uint16_t, Op>    mOps;          // Mapping of operations (Ops)
+        std::mt19937              mRandGen;      // Pseudo-Random Number Generator
+        Dist                      mDist;         // Random Distribution between 0 - 255
 
         // Operations based on opcode
         void op0x0000(); // Calls RCA 1802 program at address NNN.

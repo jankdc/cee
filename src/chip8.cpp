@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include <bitset>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -107,6 +108,12 @@ void cee::Chip8::reset()
     // We don't clear before PROG_OFFSET because there are data
     // there that we use and doesn't need resetting such as the chip8 fontset.
     std::fill(mMemory.begin() + PROG_OFFSET, mMemory.end(), 0);
+
+    // Get a new random number as seed for pseudo-random generator.
+    // Also acts as a restart procedure for the generator.
+    std::random_device rd;
+    mRandGen.seed(rd());
+
 }
 
 void cee::Chip8::updateCycle()
@@ -332,16 +339,50 @@ void cee::Chip8::op0xB000()
 // Sets VX to a random number, masked by NN.
 void cee::Chip8::op0xC000()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] = mDist(mRandGen) & (mOpCode & 0x00FF);
+    mCounter += 2;
 }
 
-// Sprites stored in memory at location in index register (I), maximum 8bits wide.
-// Wraps around the screen.
-// If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero.
-// All drawing is XOR drawing (i.e. it toggles the screen pixels).
+// Draws a sprite (which is a sequence of bytes)
+// at coordinate (VX, VY) that has a width of 8 pixels and
+// a height of N pixels.
+// Each row of 8 pixels is read as bit-coded starting from memory location I;
+// I value doesn’t change after the execution of this instruction.
+// As described above, VF is set to 1 if any screen pixels are flipped from set
+// to unset when the sprite is drawn, and to 0 if that doesn’t happen.
 void cee::Chip8::op0xD000()
 {
-    // TODO
+    uint8_t nr = mOpCode & 0x000F; // Number of rows.
+    uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+
+    for (uint8_t y = 0; y < nr; y++)
+    {
+        std::bitset<8> pixels(mMemory[mIndex + y]);
+
+        for (uint8_t x = 0; x < pixels.size(); ++x)
+        {
+            // Check if the pixel on the display is set to 1.
+            // If it is set, we need to register the collision
+            // by setting the VF register.
+            if (pixels[x])
+            {
+                // Y represents the row so multiplying the row
+                // by 64 (which is the max width of our pixel resolution)
+                // gets us the current row.
+                uint8_t location = (vx + x + ((vy + y) * 64));
+
+                if (mGfx[location] == 1)
+                {
+                    mRegisters[0xF] = 1;
+                }
+
+                mGfx[location] ^= 1;
+            }
+        }
+    }
+
+    mCounter += 2;
 }
 
 
