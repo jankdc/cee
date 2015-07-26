@@ -358,7 +358,7 @@ void cee::Chip8::op0xD000()
 
     // Start with VF being 0, presuming that no screen pixels were flipped.
     // The for-loop below will determine if that's not the case though.
-    mRegisters[0x0] = 0;
+    mRegisters[0xF] = 0;
 
     for (uint8_t y = 0; y < nr; y++)
     {
