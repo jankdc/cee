@@ -356,6 +356,10 @@ void cee::Chip8::op0xD000()
     uint8_t vy = mRegisters[(mOpCode & 0x00F0) >> 4];
     uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
 
+    // Start with VF being 0, presuming that no screen pixels were flipped.
+    // The for-loop below will determine if that's not the case though.
+    mRegisters[0x0] = 0;
+
     for (uint8_t y = 0; y < nr; y++)
     {
         std::bitset<8> pixels(mMemory[mIndex + y]);
