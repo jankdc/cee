@@ -101,7 +101,7 @@ void cee::Chip8::reset()
     mSoundTimer   = 0;     // Reset sound timer
     mRegisters.fill(0);    // Reset registers
     mStack.fill(0);        // Reset stack
-    mKeys.fill(0);         // Reset key states
+    mKeyStates.fill(0);    // Reset key states
     mGfx.fill(0);          // Reset display
 
     // Reset memory (i.e. clear program data)
@@ -151,9 +151,9 @@ void cee::Chip8::updateCycle()
     else printf("Beep!\n");
 }
 
-void cee::Chip8::updateKeys(std::array<uint8_t, 16> keys)
+void cee::Chip8::updateKeys(std::array<uint8_t, 17> keyStates)
 {
-    mKeys = keys;
+    mKeyStates = keyStates;
 }
 
 /*
@@ -393,43 +393,59 @@ void cee::Chip8::op0xD000()
 // Skips the next instruction if the key stored in VX is pressed.
 void cee::Chip8::op0xE0A1()
 {
-    // TODO
+    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    mCounter += (mKeyStates[x] == 1) ? 4 : 2;
 }
 
 // Skips the next instruction if the key stored in VX isn't pressed.
 void cee::Chip8::op0xE09E()
 {
-    // TODO
+    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    mCounter += (mKeyStates[x] != 1) ? 4 : 2;
 }
 
 // Sets VX to the value of the delay timer.
 void cee::Chip8::op0xF007()
 {
-    // TODO
+    mRegisters[(mOpCode & 0x0F00) >> 8] = mDelayTimer;
+    mCounter += 2;
 }
 
 // A key press is awaited, and then stored in VX.
 void cee::Chip8::op0xF00A()
 {
-    // TODO
+    auto isPressed = [](uint8_t i) { return i == 1; };
+
+    // We put a -1 at the end so it doesn't take the lastKeyPressed to account
+    // because that's not part of the set of keys.
+    if (std::any_of(mKeyStates.cbegin(), mKeyStates.cend() - 1, isPressed))
+    {
+        mRegisters[(mOpCode & 0x0F00) >> 8] = mKeyStates[0x10];
+        mCounter += 2;
+    }
+
+    // We don't increment the PC if no keys were pressed.
 }
 
 // Sets the delay timer to VX.
 void cee::Chip8::op0xF015()
 {
-    // TODO
+    mDelayTimer = mRegisters[(mOpCode & 0x0F00) >> 8];
+    mCounter += 2;
 }
 
 // Sets the sound timer to VX.
 void cee::Chip8::op0xF018()
 {
-    // TODO
+    mSoundTimer = mRegisters[(mOpCode & 0x0F00) >> 8];
+    mCounter += 2;
 }
 
 // Adds VX to I.
 void cee::Chip8::op0xF01E()
 {
-    // TODO
+    mIndex += mRegisters[(mOpCode & 0x0F00) >> 8];
+    mCounter += 2;
 }
 
 // Sets I to the location of the sprite for the character in VX.
@@ -453,11 +469,17 @@ void cee::Chip8::op0xF033()
 // Stores V0 to VX in memory starting at address I.
 void cee::Chip8::op0xF055()
 {
-    // TODO
+    for (size_t i = 0; i < mRegisters.size(); i++)
+        mMemory[mIndex + i] = mRegisters[i];
+
+    mCounter += 2;
 }
 
 // Fills V0 to VX with values from memory starting at address I.
 void cee::Chip8::op0xF065()
 {
-    // TODO
+    for (size_t i = 0; i < mRegisters.size(); i++)
+        mRegisters[i] = mMemory[mIndex + i];
+
+    mCounter += 2;
 }

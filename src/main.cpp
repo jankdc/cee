@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 
+#include <map>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -16,8 +17,32 @@ setupWindow(int width, int height, const char * title);
 static std::vector<uint8_t>
 readAllBytes(const char * path);
 
-static std::array<uint8_t, 16>
+std::array<uint8_t, 17>
 getKeyStates(GLFWwindow * window);
+
+static std::map<int, uint8_t>
+keyboardLayout
+{
+    {GLFW_KEY_X, 0},
+    {GLFW_KEY_1, 1},
+    {GLFW_KEY_2, 2},
+    {GLFW_KEY_3, 3},
+    {GLFW_KEY_Q, 4},
+    {GLFW_KEY_W, 5},
+    {GLFW_KEY_E, 6},
+    {GLFW_KEY_A, 7},
+    {GLFW_KEY_S, 8},
+    {GLFW_KEY_D, 9},
+    {GLFW_KEY_Z, 0xA},
+    {GLFW_KEY_C, 0xB},
+    {GLFW_KEY_4, 0xC},
+    {GLFW_KEY_R, 0xD},
+    {GLFW_KEY_F, 0xE},
+    {GLFW_KEY_V, 0xF}
+};
+
+static std::map<GLFWwindow *, uint8_t>
+lastKeyPressed;
 
 int main(int argc, char ** argv)
 {
@@ -70,6 +95,9 @@ setupWindow(int width, int height, const char * title)
 
     glfwMakeContextCurrent(window);
 
+    // Register window to its own last key press state.
+    lastKeyPressed.emplace(window, GLFW_KEY_UNKNOWN);
+
     // Callback Parameters.
     // k: Key
     // s: Scan Code
@@ -81,7 +109,13 @@ setupWindow(int width, int height, const char * title)
         {
             glfwSetWindowShouldClose(w, GL_TRUE);
         }
+
+        if (keyboardLayout.count(k))
+        {
+            lastKeyPressed[w] = keyboardLayout[k];
+        }
     });
+
 
     // Load GL extensions
     glewExperimental = GL_TRUE;
@@ -101,10 +135,22 @@ setupWindow(int width, int height, const char * title)
     return window;
 }
 
-std::array<uint8_t, 16>
+std::array<uint8_t, 17>
 getKeyStates(GLFWwindow * window)
 {
-    return {};
+    std::array<uint8_t, 17> keys;
+
+    for (auto & pair : keyboardLayout)
+    {
+        auto state = pair.first;
+        auto index = pair.second;
+        keys[index] = (glfwGetKey(window, state) == GLFW_PRESS ? 1 : 0);
+    }
+
+    // Last item of the array should store the most recent key press.
+    keys[0x10] = lastKeyPressed[window];
+
+    return keys;
 }
 
 std::vector<uint8_t>

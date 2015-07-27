@@ -18,10 +18,10 @@ namespace cee
     public:
         explicit Chip8();
 
-        void reset();                                   // Reset emulation state to default settings
-        void loadProgram(std::vector<uint8_t> program); // Load program into emulator's memory
-        void updateCycle();                             // Emulates one cycle
-        void updateKeys(std::array<uint8_t, 16> keys);  // Updates the key press inputs with new ones
+        void reset();                                       // Reset emulation state to default settings
+        void loadProgram(std::vector<uint8_t> program);     // Load program into emulator's memory
+        void updateKeys(std::array<uint8_t, 17> keyStates); // Updates key states + most recent key pressed at the end
+        void updateCycle();                                 // Emulates one cycle
     private:
         using Op   = std::function<void()>;
         using Dist = std::uniform_int_distribution<uint8_t>;
@@ -35,7 +35,7 @@ namespace cee
         std::array<uint16_t, 16>  mStack;        // 16 levels of stack
         std::array<uint8_t, 4096> mMemory;       // 4K available space
         std::array<uint8_t, 16>   mRegisters;    // General Purpose Registers
-        std::array<uint8_t, 16>   mKeys;         // Current key state
+        std::array<uint8_t, 17>   mKeyStates;    // Current key state + Most recent key press
         std::array<uint8_t, 2048> mGfx;          // 64 x 32 Pixel Resolution
         std::map<uint16_t, Op>    mOps;          // Mapping of operations (Ops)
         std::mt19937              mRandGen;      // Pseudo-Random Number Generator
