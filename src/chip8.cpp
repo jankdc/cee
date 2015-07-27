@@ -452,7 +452,8 @@ void cee::Chip8::op0xF01E()
 // Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 void cee::Chip8::op0xF029()
 {
-    // TODO
+    mIndex = ((mOpCode & 0x0F00) >> 8) * 5;
+    mCounter += 2;
 }
 
 // Stores the Binary-coded decimal representation of VX,
@@ -463,7 +464,10 @@ void cee::Chip8::op0xF029()
 // and the ones digit at location I+2.).
 void cee::Chip8::op0xF033()
 {
-    // TODO
+    mMemory[mIndex] = mRegisters[(mOpCode & 0x0F00) >> 8] / 100;
+    mMemory[mIndex + 1] = (mRegisters[(mOpCode & 0x0F00) >> 8] / 10) % 10;
+    mMemory[mIndex + 2] = (mRegisters[(mOpCode & 0x0F00) >> 8] % 100) % 10;
+    mCounter += 2;
 }
 
 // Stores V0 to VX in memory starting at address I.
