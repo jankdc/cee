@@ -469,7 +469,8 @@ void cee::Chip8::op0xF033()
 // Stores V0 to VX in memory starting at address I.
 void cee::Chip8::op0xF055()
 {
-    for (size_t i = 0; i < mRegisters.size(); i++)
+    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    for (size_t i = 0; i <= x; i++)
         mMemory[mIndex + i] = mRegisters[i];
 
     mCounter += 2;
@@ -478,7 +479,8 @@ void cee::Chip8::op0xF055()
 // Fills V0 to VX with values from memory starting at address I.
 void cee::Chip8::op0xF065()
 {
-    for (size_t i = 0; i < mRegisters.size(); i++)
+    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    for (size_t i = 0; i <= x; i++)
         mRegisters[i] = mMemory[mIndex + i];
 
     mCounter += 2;
