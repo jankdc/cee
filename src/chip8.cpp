@@ -169,6 +169,7 @@ void cee::Chip8::updateKeys(std::array<uint8_t, 17> keyStates)
 void cee::Chip8::op0x0000()
 {
     // This is ignored since we don't have that microprocessor.
+    mCounter += 2;
 }
 
 // Clears the screen.
@@ -181,8 +182,8 @@ void cee::Chip8::op0x000E()
 // Returns from a subroutine.
 void cee::Chip8::op0x00EE()
 {
-    mCounter = mStack[mStackPointer];
     mStackPointer -= 1;
+    mCounter = mStack[mStackPointer];
     mCounter += 2;
 }
 
