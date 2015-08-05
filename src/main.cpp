@@ -17,7 +17,7 @@ setupWindow(int width, int height, const char * title);
 static std::vector<uint8_t>
 readAllBytes(const char * path);
 
-std::array<uint8_t, 17>
+static std::array<uint8_t, 17>
 getKeyStates(GLFWwindow * window);
 
 static std::map<int, uint8_t>
