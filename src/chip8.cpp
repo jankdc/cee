@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <stack>
 
 static constexpr std::array<uint8_t, 80> CHIP8_FONTSET =
 {{
@@ -99,9 +100,9 @@ void cee::Chip8::reset()
     mStackPointer = 0;     // Reset stack pointer
     mDelayTimer   = 0;     // Reset delay timer
     mSoundTimer   = 0;     // Reset sound timer
+    mKeys         = {};    // Reset key states
     mRegisters.fill(0);    // Reset registers
     mStack.fill(0);        // Reset stack
-    mKeyStates.fill(0);    // Reset key states
     mGfx.fill(0);          // Reset display
 
     // Reset memory (i.e. clear program data)
@@ -149,11 +150,12 @@ void cee::Chip8::updateCycle()
     // Update sound timer
     if (mSoundTimer > 0) mSoundTimer -= 1;
     else printf("Beep!\n");
+
 }
 
-void cee::Chip8::updateKeys(std::array<uint8_t, 17> keyStates)
+void cee::Chip8::updateKeys(cee::Keys keys)
 {
-    mKeyStates = keyStates;
+    mKeys = keys;
 }
 
 /*
@@ -395,14 +397,14 @@ void cee::Chip8::op0xD000()
 void cee::Chip8::op0xE0A1()
 {
     uint8_t x = (mOpCode & 0x0F00) >> 8;
-    mCounter += (mKeyStates[x] == 1) ? 4 : 2;
+    mCounter += ((mKeys.keysPressed & (1 << x)) == 1) ? 4 : 2;
 }
 
 // Skips the next instruction if the key stored in VX isn't pressed.
 void cee::Chip8::op0xE09E()
 {
     uint8_t x = (mOpCode & 0x0F00) >> 8;
-    mCounter += (mKeyStates[x] != 1) ? 4 : 2;
+    mCounter += ((mKeys.keysPressed & (1 << x)) != 1) ? 4 : 2;
 }
 
 // Sets VX to the value of the delay timer.
@@ -415,13 +417,12 @@ void cee::Chip8::op0xF007()
 // A key press is awaited, and then stored in VX.
 void cee::Chip8::op0xF00A()
 {
-    auto isPressed = [](uint8_t i) { return i == 1; };
-
-    // We put a -1 at the end so it doesn't take the lastKeyPressed to account
-    // because that's not part of the set of keys.
-    if (std::any_of(mKeyStates.cbegin(), mKeyStates.cend() - 1, isPressed))
+    // If any of the bits are on, then an integer representation
+    // of keysPressed should more than 0, which means that there
+    // must be key being pressed.
+    if (mKeys.keysPressed > 0)
     {
-        mRegisters[(mOpCode & 0x0F00) >> 8] = mKeyStates[0x10];
+        mRegisters[(mOpCode & 0x0F00) >> 8] = mKeys.lastKeyPressed;
         mCounter += 2;
     }
 

@@ -10,6 +10,7 @@
 #include <array>
 
 #include "chip8.hpp"
+#include "keys.hpp"
 
 static GLFWwindow *
 setupWindow(int width, int height, const char * title);
@@ -17,7 +18,7 @@ setupWindow(int width, int height, const char * title);
 static std::vector<uint8_t>
 readAllBytes(const char * path);
 
-static std::array<uint8_t, 17>
+static cee::Keys
 getKeyStates(GLFWwindow * window);
 
 static std::map<int, uint8_t>
@@ -135,20 +136,21 @@ setupWindow(int width, int height, const char * title)
     return window;
 }
 
-std::array<uint8_t, 17>
+cee::Keys
 getKeyStates(GLFWwindow * window)
 {
-    std::array<uint8_t, 17> keys;
+    cee::Keys keys;
 
     for (auto & pair : keyboardLayout)
     {
         auto state = pair.first;
         auto index = pair.second;
-        keys[index] = (glfwGetKey(window, state) == GLFW_PRESS ? 1 : 0);
+        auto offset = (1 << index);
+        auto result = (glfwGetKey(window, state) == GLFW_PRESS ? offset : 0);
+        keys.keysPressed |= result;
     }
 
-    // Last item of the array should store the most recent key press.
-    keys[0x10] = lastKeyPressed[window];
+    keys.lastKeyPressed = lastKeyPressed[window];
 
     return keys;
 }
