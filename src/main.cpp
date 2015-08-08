@@ -7,7 +7,6 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <array>
 
 #include "chip8.hpp"
 #include "keys.hpp"
@@ -52,11 +51,23 @@ int main(int argc, char ** argv)
     cee::Chip8 chip;
     chip.loadProgram(readAllBytes("data/PONG"));
 
+    constexpr auto targetFps = 1.0 / 60.0;
+    auto ctime = glfwGetTime(); // Current time
+    auto ptime = ctime;         // Previous time
+    auto dtime = 0.0;           // Delta time
+
     glfwShowWindow(window);
     while (! glfwWindowShouldClose(window))
     {
-        chip.updateKeys(getKeyStates(window));
-        chip.updateCycle();
+        ctime = glfwGetTime();
+        dtime = ctime - ptime;
+
+        if (dtime > targetFps)
+        {
+            chip.updateKeys(getKeyStates(window));
+            chip.updateCycle();
+            ptime = ctime;
+        }
 
         // Clear back buffer and background color.
         glClear(GL_COLOR_BUFFER_BIT);
