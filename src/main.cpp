@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -11,7 +12,6 @@
 #include <map>
 #include <string>
 #include <iostream>
-#include <iomanip>
 #include <fstream>
 
 #include "chip8.hpp"
@@ -56,6 +56,12 @@ keyboardLayout
     {GLFW_KEY_V, 0xF}
 };
 
+static inline float
+mapRangeWidth(float index);
+
+static inline float
+mapRangeHeight(float index);
+
 static std::map<GLFWwindow *, uint8_t>
 lastKeyPressed;
 
@@ -64,6 +70,12 @@ WIDTH = 800;
 
 static constexpr int
 HEIGHT = 400;
+
+static constexpr float
+PX_WIDTH = (1.0f / WIDTH) * (WIDTH / 64.0f);
+
+static constexpr float
+PX_HEIGHT = (1.0f / HEIGHT) * (HEIGHT / 32.0f);
 
 int main(int argc, char ** argv)
 {
@@ -85,7 +97,7 @@ int main(int argc, char ** argv)
 
     auto window = setupWindow(WIDTH, HEIGHT, "Chip8 Emulator");
 
-    const GLfloat pxVerts[] =
+    constexpr GLfloat pxVerts[] =
     {
         -1.0f,  1.0f, 0.0f, // Top Left
          1.0f,  1.0f, 0.0f, // Top Right
@@ -93,7 +105,7 @@ int main(int argc, char ** argv)
          1.0f, -1.0f, 0.0f  // Bottom Right
     };
 
-    const GLuint pxIndices[] =
+    constexpr GLuint pxIndices[] =
     {
         0, 1, 2,
         2, 1, 3
@@ -101,12 +113,11 @@ int main(int argc, char ** argv)
 
     // Initialize the VAO and other buffers associated
     // with drawing an emulated pixel.
-    GLuint vao;
+    GLuint vao, vbo, ibo;
     glGenVertexArrays(1, &vao);
 
     glBindVertexArray(vao);
     {
-        GLuint vbo, ibo;
         glGenBuffers(1, &vbo);
         glGenBuffers(1, &ibo);
 
@@ -133,6 +144,7 @@ int main(int argc, char ** argv)
 
     // Current Shader Program
     const auto pxProgram = makeProgram({pxVertex, pxFragment});
+    glUseProgram(pxProgram);
 
     glfwShowWindow(window);
     while (! glfwWindowShouldClose(window))
@@ -145,38 +157,28 @@ int main(int argc, char ** argv)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         glBindVertexArray(vao);
-        glUseProgram(pxProgram);
-
-        auto gfx = chip.getGfx();
+        const auto gfx = chip.getGfx();
         for (int i = 0; i < 32; ++i)
         {
             // Maps the width resolution [0-HEIGHT] to [-1.0-1.0]
-            auto y = - ((2.0f / static_cast<float>(HEIGHT)) *
-                       (i * (static_cast<float>(HEIGHT) / 32.0f)) - 0.96f);
+            auto y = - mapRangeHeight(i);
+            auto l = i * 64;
 
             for (int j = 0; j < 64; ++j)
             {
-                // Maps the width resolution [0-WIDTH] to [-1.0-1.0]
-                auto x = ((2.0f / static_cast<float>(WIDTH)) *
-                       (j * (static_cast<float>(WIDTH) / 64.0f)) - 0.98f);
-
-                auto ident = glGetUniformLocation(pxProgram, "PxModel");
-                auto model = glm::mat4(1.0f);
-                model = glm::translate(model, glm::vec3(x, y, 0.0f));
-                model = glm::scale(model, glm::vec3(
-                    ((1.0f / static_cast<float>(WIDTH)) *
-                       ((static_cast<float>(WIDTH) / 64.0f)))
-                    ,((1.0f / static_cast<float>(HEIGHT)) *
-                       ((static_cast<float>(HEIGHT) / 32.0f))), 1.0f));
-                glUniformMatrix4fv(ident, 1, GL_FALSE, glm::value_ptr(model));
-
-                auto flipd = glGetUniformLocation(pxProgram, "isFlipped");
-
-                glUniform1i(flipd, gfx[(i * 64) + j]);
-                glDrawElements(GL_TRIANGLES, sizeof(pxIndices), GL_UNSIGNED_INT, nullptr);
+                if (gfx[l + j] == 1)
+                {
+                    // Maps the width resolution [0-WIDTH] to [-1.0-1.0]
+                    auto x = mapRangeWidth(j);
+                    auto ident = glGetUniformLocation(pxProgram, "PxModel");
+                    auto model = glm::mat4(1.0f);
+                    model = glm::translate(model, glm::vec3(x, y, 0.0f));
+                    model = glm::scale(model, glm::vec3(PX_WIDTH, PX_HEIGHT, 1.0f));
+                    glUniformMatrix4fv(ident, 1, GL_FALSE, glm::value_ptr(model));
+                    glDrawElements(GL_TRIANGLES, sizeof(pxIndices), GL_UNSIGNED_INT, nullptr);
+                }
             }
         }
-
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
@@ -184,9 +186,12 @@ int main(int argc, char ** argv)
     }
 
     // Cleanup resources
+    glDeleteProgram(pxProgram);
     glDeleteShader(pxVertex);
     glDeleteShader(pxFragment);
-    glDeleteProgram(pxProgram);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &ibo);
+    glDeleteBuffers(1, &vbo);
     glfwTerminate();
     return 0;
 }
@@ -231,7 +236,7 @@ setupWindow(int width, int height, const char * title)
             glfwSetWindowShouldClose(w, GL_TRUE);
         }
 
-        if (keyboardLayout.count(k))
+        if (keyboardLayout.count(k) && a == GLFW_PRESS)
         {
             lastKeyPressed[w] = keyboardLayout[k];
         }
@@ -265,7 +270,7 @@ getKeyStates(GLFWwindow * window)
     {
         auto state = pair.first;
         auto index = pair.second;
-        auto offset = (1 << (index - 1));
+        auto offset = (1 << index);
         auto result = (glfwGetKey(window, state) == GLFW_PRESS ? offset : 0);
         keys.keysPressed |= result;
     }
@@ -351,3 +356,21 @@ makeProgram(std::vector<GLuint> shaders)
     return id;
 }
 
+
+static inline float
+mapRangeWidth(float index)
+{
+    constexpr auto h = static_cast<float>(WIDTH);
+    constexpr auto x = 2.0f / h;
+    constexpr auto s = h / 64.0f;
+    return (x * index * s) - 0.98f;
+}
+
+static inline float
+mapRangeHeight(float index)
+{
+    constexpr auto h = static_cast<float>(HEIGHT);
+    constexpr auto x = 2.0f / h;
+    constexpr auto s = h / 32.0f;
+    return (x * index * s) - 0.96f;
+}

@@ -385,7 +385,6 @@ void cee::Chip8::op0xD000()
     mCounter += 2;
 }
 
-
 // Skips the next instruction if the key stored in VX is pressed.
 void cee::Chip8::op0xE09E()
 {
@@ -491,7 +490,7 @@ void cee::Chip8::op0xF065()
     mCounter += 2;
 }
 
-std::array<uint8_t, 2048> cee::Chip8::getGfx() const
+const uint8_t * cee::Chip8::getGfx() const
 {
-    return mGfx;
+    return mGfx.data();
 }

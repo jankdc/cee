@@ -25,7 +25,7 @@ namespace cee
         void updateKeys(cee::Keys keys);                 // Updates key states
         void updateCycle();                              // Emulates one cycle
 
-        std::array<uint8_t, 2048> getGfx() const;        // Chip8 Graphics Representation
+        const uint8_t * getGfx() const;        // Chip8 Graphics Representation
     private:
         using Op   = std::function<void()>;
         using Dist = std::uniform_int_distribution<uint8_t>;
