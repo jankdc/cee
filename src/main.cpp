@@ -121,23 +121,11 @@ int main(int argc, char ** argv)
     // Current Shader Program
     const auto pxProgram = makeProgram({pxVertex, pxFragment});
 
-    constexpr auto targetFps = 1.0 / 60.0;
-    auto ctime = glfwGetTime(); // Current time
-    auto ptime = ctime;         // Previous time
-    auto dtime = 0.0;           // Delta time
-
     glfwShowWindow(window);
     while (! glfwWindowShouldClose(window))
     {
-        ctime = glfwGetTime();
-        dtime = ctime - ptime;
-
-        if (dtime > targetFps)
-        {
-            chip.updateKeys(getKeyStates(window));
-            chip.updateCycle();
-            ptime = ctime;
-        }
+        chip.updateKeys(getKeyStates(window));
+        chip.updateCycle();
 
         // Clear back buffer and background color.
         glClear(GL_COLOR_BUFFER_BIT);
@@ -157,7 +145,7 @@ int main(int argc, char ** argv)
             {
                 // Maps the width resolution [0-WIDTH] to [-1.0-1.0]
                 auto x = ((2.0f / static_cast<float>(WIDTH)) *
-                       (j * (static_cast<float>(WIDTH) / 64.0f)) - 1.015f);
+                       (j * (static_cast<float>(WIDTH) / 64.0f)) - 0.98f);
 
                 auto ident = glGetUniformLocation(pxProgram, "PxModel");
                 auto model = glm::mat4(1.0f);
