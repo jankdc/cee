@@ -67,10 +67,23 @@ HEIGHT = 400;
 
 int main(int argc, char ** argv)
 {
-    auto window = setupWindow(WIDTH, HEIGHT, "Chip8 Emulator");
+    auto pathToRom = std::string();
+
+    if (argc == 2)
+    {
+        pathToRom = argv[1];
+    }
+    else
+    {
+        printf("Chip8 Error: Wrong number of arguments\n");
+        glfwTerminate();
+        return -1;
+    }
 
     cee::Chip8 chip;
-    chip.loadProgram(readAllBytes("data/programs/PONG"));
+    chip.loadProgram(readAllBytes(pathToRom.c_str()));
+
+    auto window = setupWindow(WIDTH, HEIGHT, "Chip8 Emulator");
 
     const GLfloat pxVerts[] =
     {
@@ -268,7 +281,7 @@ readAllBytes(const char * path)
     try
     {
         std::ifstream file;
-        file.exceptions(std::ios::badbit);
+        file.exceptions(std::ios::failbit);
         file.open(path, std::ios::binary|std::ios::ate);
         auto length = file.tellg();
         std::vector<uint8_t> result(length);
@@ -295,7 +308,7 @@ readAllChars(const char * path)
     try
     {
         std::ifstream file;
-        file.exceptions(std::ios::badbit);
+        file.exceptions(std::ios::failbit);
         file.open(path, std::ios::ate);
         auto length = file.tellg();
         std::string result(length, ' ');
