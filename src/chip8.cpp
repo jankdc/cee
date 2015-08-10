@@ -34,18 +34,12 @@ static constexpr size_t PROG_OFFSET = 512;
 
 cee::Chip8::Chip8()
 {
-    this->reset();
-
-    // Load chip8 fontset
-    for (size_t i = 0; i < CHIP8_FONTSET.size(); i++)
-        mMemory[i] = CHIP8_FONTSET[i];
-
     // Load operations
     #ifndef ADD_OP
     #define ADD_OP(n) mOps.emplace(n, std::bind(&Chip8::op##n, this));
 
     ADD_OP(0x0000)
-    ADD_OP(0x000E)
+    ADD_OP(0x00E0)
     ADD_OP(0x00EE)
     ADD_OP(0x1000)
     ADD_OP(0x2000)
@@ -86,6 +80,8 @@ cee::Chip8::Chip8()
 
 void cee::Chip8::loadProgram(std::vector<uint8_t> program)
 {
+    this->reset();
+
     // Prevent Memory Overflow
     assert(program.size() < (mMemory.size() - PROG_OFFSET));
     for (size_t i = 0; i < program.size(); i++)
@@ -104,17 +100,16 @@ void cee::Chip8::reset()
     mRegisters.fill(0);    // Reset registers
     mStack.fill(0);        // Reset stack
     mGfx.fill(0);          // Reset display
+    mMemory.fill(0);       // Reset memory
 
-    // Reset memory (i.e. clear program data)
-    // We don't clear before PROG_OFFSET because there are data
-    // there that we use and doesn't need resetting such as the chip8 fontset.
-    std::fill(mMemory.begin() + PROG_OFFSET, mMemory.end(), 0);
+    // Load chip8 fontset
+    for (size_t i = 0; i < CHIP8_FONTSET.size(); i++)
+        mMemory[i] = CHIP8_FONTSET[i];
 
     // Get a new random number as seed for pseudo-random generator.
     // Also acts as a restart procedure for the generator.
     std::random_device rd;
     mRandGen.seed(rd());
-
 }
 
 void cee::Chip8::updateCycle()
@@ -145,11 +140,9 @@ void cee::Chip8::updateCycle()
 
     // Update delay timer
     if (mDelayTimer > 0) mDelayTimer -= 1;
-    else // Do nothing
 
     // Update sound timer
     if (mSoundTimer > 0) mSoundTimer -= 1;
-    else printf("Beep!\n");
 
 }
 
@@ -175,7 +168,7 @@ void cee::Chip8::op0x0000()
 }
 
 // Clears the screen.
-void cee::Chip8::op0x000E()
+void cee::Chip8::op0x00E0()
 {
     mGfx.fill(0);
     mCounter += 2;
@@ -276,7 +269,7 @@ void cee::Chip8::op0x8004()
     uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
 
     mRegisters[(mOpCode & 0x0F00) >> 8] = vx + vy;
-    mRegisters[0xF] = (vx + vy > 0xFF) ? 1 : 0;
+    mRegisters[0xF] = (vy > (0xFF - vx)) ? 1 : 0;
     mCounter += 2;
 }
 
@@ -313,7 +306,7 @@ void cee::Chip8::op0x8007()
 // Shifts VX left by 1. VF is set value of the most sig bit of VX before shift.
 void cee::Chip8::op0x800E()
 {
-    mRegisters[0xF] = mRegisters[(mOpCode & 0x0F00) >> 8] & 128;
+    mRegisters[0xF] = mRegisters[(mOpCode & 0x0F00) >> 8] >> 7;
     mRegisters[(mOpCode & 0x0F00) >> 8] <<= 1;
     mCounter += 2;
 }
@@ -365,19 +358,19 @@ void cee::Chip8::op0xD000()
 
     for (uint8_t y = 0; y < nr; y++)
     {
-        std::bitset<8> pixels(mMemory[mIndex + y]);
+        uint8_t pixels = mMemory[mIndex + y];
 
-        for (uint8_t x = 0; x < pixels.size(); ++x)
+        for (uint8_t x = 0; x < 8; ++x)
         {
             // Check if the pixel on the display is set to 1.
             // If it is set, we need to register the collision
             // by setting the VF register.
-            if (pixels[x])
+            if ((pixels & (0x80 >> x)) != 0)
             {
                 // Y represents the row so multiplying the row
                 // by 64 (which is the max width of our pixel resolution)
                 // gets us the current row.
-                uint8_t location = (vx + x + ((vy + y) * 64));
+                auto location = (vx + x + ((vy + y) * 64));
 
                 if (mGfx[location] == 1)
                 {
@@ -394,17 +387,17 @@ void cee::Chip8::op0xD000()
 
 
 // Skips the next instruction if the key stored in VX is pressed.
-void cee::Chip8::op0xE0A1()
+void cee::Chip8::op0xE09E()
 {
-    uint8_t x = (mOpCode & 0x0F00) >> 8;
-    mCounter += ((mKeys.keysPressed & (1 << x)) == 1) ? 4 : 2;
+    auto x = (mOpCode & 0x0F00) >> 8;
+    mCounter += (mKeys.keysPressed & (1 << x)) ? 4 : 2;
 }
 
 // Skips the next instruction if the key stored in VX isn't pressed.
-void cee::Chip8::op0xE09E()
+void cee::Chip8::op0xE0A1()
 {
-    uint8_t x = (mOpCode & 0x0F00) >> 8;
-    mCounter += ((mKeys.keysPressed & (1 << x)) != 1) ? 4 : 2;
+    auto x = (mOpCode & 0x0F00) >> 8;
+    mCounter += (mKeys.keysPressed & (1 << x)) ? 2 : 4;
 }
 
 // Sets VX to the value of the delay timer.
@@ -446,6 +439,8 @@ void cee::Chip8::op0xF018()
 // Adds VX to I.
 void cee::Chip8::op0xF01E()
 {
+    uint8_t vx = mRegisters[(mOpCode & 0x0F00) >> 8];
+    mRegisters[0xF] = (mIndex + vx > 0xFFF) ? 1 : 0;
     mIndex += mRegisters[(mOpCode & 0x0F00) >> 8];
     mCounter += 2;
 }
@@ -454,7 +449,7 @@ void cee::Chip8::op0xF01E()
 // Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 void cee::Chip8::op0xF029()
 {
-    mIndex = ((mOpCode & 0x0F00) >> 8) * 5;
+    mIndex = mRegisters[((mOpCode & 0x0F00) >> 8)] * 5;
     mCounter += 2;
 }
 
@@ -475,19 +470,28 @@ void cee::Chip8::op0xF033()
 // Stores V0 to VX in memory starting at address I.
 void cee::Chip8::op0xF055()
 {
-    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    auto x = (mOpCode & 0x0F00) >> 8;
     for (size_t i = 0; i <= x; i++)
         mMemory[mIndex + i] = mRegisters[i];
 
+    // On the original interpreter, when the operation is done, I = I + X + 1.
+    mIndex += x + 1;
     mCounter += 2;
 }
 
 // Fills V0 to VX with values from memory starting at address I.
 void cee::Chip8::op0xF065()
 {
-    uint8_t x = (mOpCode & 0x0F00) >> 8;
+    auto x = (mOpCode & 0x0F00) >> 8;
     for (size_t i = 0; i <= x; i++)
         mRegisters[i] = mMemory[mIndex + i];
 
+    // On the original interpreter, when the operation is done, I = I + X + 1.
+    mIndex += x + 1;
     mCounter += 2;
+}
+
+std::array<uint8_t, 2048> cee::Chip8::getGfx() const
+{
+    return mGfx;
 }

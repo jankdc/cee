@@ -24,6 +24,8 @@ namespace cee
         void loadProgram(std::vector<uint8_t> program);  // Load program into emulator's memory
         void updateKeys(cee::Keys keys);                 // Updates key states
         void updateCycle();                              // Emulates one cycle
+
+        std::array<uint8_t, 2048> getGfx() const;        // Chip8 Graphics Representation
     private:
         using Op   = std::function<void()>;
         using Dist = std::uniform_int_distribution<uint8_t>;
@@ -45,7 +47,7 @@ namespace cee
 
         // Operations based on opcode
         void op0x0000(); // Calls RCA 1802 program at address NNN.
-        void op0x000E(); // Clears the screen.
+        void op0x00E0(); // Clears the screen.
         void op0x00EE(); // Returns from a subroutine.
         void op0x1000(); // Jumps to address NNN.
         void op0x2000(); // Calls subroutine at NNN.
@@ -77,8 +79,8 @@ namespace cee
         // to unset when the sprite is drawn, and to 0 if that doesn’t happen.
         void op0xD000();
 
-        void op0xE0A1(); // Skips the next instruction if the key stored in VX is pressed.
-        void op0xE09E(); // Skips the next instruction if the key stored in VX isn't pressed.
+        void op0xE09E(); // Skips the next instruction if the key stored in VX is pressed.
+        void op0xE0A1(); // Skips the next instruction if the key stored in VX isn't pressed.
         void op0xF007(); // Sets VX to the value of the delay timer.
         void op0xF00A(); // A key press is awaited, and then stored in VX.
         void op0xF015(); // Sets the delay timer to VX.

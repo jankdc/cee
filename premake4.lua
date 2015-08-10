@@ -4,7 +4,8 @@ solution "cee"
 
         defines {
             "GLFW_STATIC",
-            "GLEW_STATIC"
+            "GLEW_STATIC",
+            "GLM_FORCE_RADIANS"
         }
 
         libdirs {
