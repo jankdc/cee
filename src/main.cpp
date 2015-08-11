@@ -357,7 +357,7 @@ makeProgram(std::vector<GLuint> shaders)
 }
 
 
-static inline float
+float
 mapRangeWidth(float index)
 {
     constexpr auto h = static_cast<float>(WIDTH);
@@ -366,7 +366,7 @@ mapRangeWidth(float index)
     return (x * index * s) - 0.98f;
 }
 
-static inline float
+float
 mapRangeHeight(float index)
 {
     constexpr auto h = static_cast<float>(HEIGHT);
