@@ -40,7 +40,7 @@ cd cee
 
 ## TODO LIST
 
-- [ ] Add beeping sound (currently no sound).
+- [x] Add beeping sound (currently no sound).
 - [ ] Add controls to frame rate.
 
 ## Games
