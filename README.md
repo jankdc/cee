@@ -6,9 +6,11 @@
 
 ## Dependencies
 
-- GLFW3 (3.1.x)
-- GLEW (1.12.x)
-- GLM (0.9.6.x)
+- GLFW3 (3.1.x) - GFX
+- GLEW (1.12.x) - GL Extensions
+- GLM (0.9.6.x) - Math
+- SFML (2.3)    - Sound
+- C++11 Compiler (g++ or clang++)
 - Premake4 (Build System)
 
 ## Build
