@@ -10,7 +10,8 @@ solution "cee"
 
         libdirs {
             os.findlib("glfw3"),
-            os.findlib("glew")
+            os.findlib("glew"),
+            os.findlib("sfml")
         }
 
     configuration {"gmake"}
@@ -21,6 +22,8 @@ solution "cee"
 
     configuration {"macosx"}
         links {
+            "sfml-audio",
+            "sfml-system",
             "glfw3",
             "GLEW",
             "Cocoa.framework",
@@ -31,6 +34,8 @@ solution "cee"
 
     configuration {"linux"}
         links {
+            "sfml-audio",
+            "sfml-system",
             "glfw3",
             "GLEW",
             "GL",

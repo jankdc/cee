@@ -1,6 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <SFML/Audio.hpp>
+
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -71,6 +73,9 @@ WIDTH = 800;
 static constexpr int
 HEIGHT = 400;
 
+static constexpr const char *
+TITLE = "Chip8 Emulator";
+
 static constexpr float
 PX_WIDTH = (1.0f / WIDTH) * (WIDTH / 64.0f);
 
@@ -88,14 +93,24 @@ int main(int argc, char ** argv)
     else
     {
         printf("Chip8 Error: Wrong number of arguments\n");
-        glfwTerminate();
         return -1;
     }
 
+    sf::SoundBuffer beepSnd;
+    if (! beepSnd.loadFromFile("data/sounds/beep.wav"))
+    {
+        printf("Chip8 Error: Can't load the beeping sound.\n");
+        return -1;
+    }
+
+    sf::Sound sndSrc;
+    sndSrc.setBuffer(beepSnd);
+    sndSrc.setLoop(false);
+
+    auto window = setupWindow(WIDTH, HEIGHT, TITLE);
+
     cee::Chip8 chip;
     chip.loadProgram(readAllBytes(pathToRom.c_str()));
-
-    auto window = setupWindow(WIDTH, HEIGHT, "Chip8 Emulator");
 
     constexpr GLfloat pxVerts[] =
     {
@@ -151,6 +166,9 @@ int main(int argc, char ** argv)
     {
         chip.updateKeys(getKeyStates(window));
         chip.updateCycle();
+
+        if (chip.isBeeping() && sndSrc.getStatus() != sf::SoundSource::Playing)
+            sndSrc.play();
 
         // Clear back buffer and background color.
         glClear(GL_COLOR_BUFFER_BIT);
@@ -374,3 +392,4 @@ mapRangeHeight(float index)
     constexpr auto s = h / 32.0f;
     return (x * index * s) - 0.96f;
 }
+

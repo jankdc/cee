@@ -151,6 +151,11 @@ void cee::Chip8::updateKeys(cee::Keys keys)
     mKeys = keys;
 }
 
+bool cee::Chip8::isBeeping() const
+{
+    return mSoundTimer > 0;
+}
+
 /*
   ___  ____   ____ ___  ____  _____ ____
  / _ \|  _ \ / ___/ _ \|  _ \| ____/ ___|
